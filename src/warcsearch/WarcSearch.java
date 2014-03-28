@@ -1,7 +1,16 @@
 package warcsearch;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 /**
  * Information Retrieval HW 1
@@ -14,13 +23,11 @@ import org.apache.commons.cli.*;
  * 
  * TODO
  * - parallel
- * - messages
- * - comments
- * 
+ * - handle input better?
  */
 public class WarcSearch {
 
-	/** CLI parser options */
+	/** CLI parser, options, help */
 	private static CommandLineParser parser = new GnuParser();
 	private static HelpFormatter formatter = new HelpFormatter();
 	private static Options options = new Options();
@@ -40,14 +47,22 @@ public class WarcSearch {
 	 * @param archive
 	 */
 	public static void run(String query, String archive) {
+		// parse
+		System.out.println("Parsing the WARC archive.");
 		WebArchive wa = new WebArchive(archive);
+		// index
+		System.out.println("Configuring indexer.");
 		Indexer indexer = new Indexer();
+		System.out.println("Indexing..");
 		indexer.write(wa.getLuceneDocuments());
+		// search
+		System.out.println("Searching \"" + query + "\"");
 		ArrayList<Result> results = indexer.search(query);
 		// display
 		System.out.println("Found " + results.size() + " hits for query " + query);
-		System.out.println("===========================");
-		System.out.println("Rank\tDocNumber\tDocId\tScore");
+		System.out.println();
+		System.out.println("Rank\tDoc#\tScore\t\t\tDocId");
+		System.out.println("----------------------------------------------------------------------");
 		int i = 0;
 		for (Result r: results) {
 			System.out.println(++i + "\t"+ r.toString());
@@ -73,16 +88,24 @@ public class WarcSearch {
 			if (cli.hasOption("a") && cli.hasOption("q")) {
 				String query = cli.getOptionValue("q");
 				String archive = cli.getOptionValue("a");
-				// TODO check input?
 				run(query, archive);
-				
 			} else if (cli.hasOption("i")) {
-				// TODO ask user for input
+				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+				System.out.println("Pleae enter the path to WARC archive:");
+				String archive = br.readLine();
+				System.out.println("Pleae enter the query:");
+				String query = br.readLine();
+				run(query, archive);
 			} else {
 				formatter.printHelp("WarcSearch", options );
+				System.exit(1);
 			}
 		} catch (ParseException e) {
 	        System.err.println("There was a problem with parsing arguments failed.");
+	        System.err.println(e.getMessage());
+	        e.getStackTrace();
+	    } catch (IOException e) {
+	        System.err.println("There was a problem with user input.");
 	        System.err.println(e.getMessage());
 	        e.getStackTrace();
 	    }

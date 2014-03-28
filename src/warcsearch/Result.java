@@ -35,7 +35,7 @@ public class Result {
 	 * returns nice line of the result for user
 	 */
 	public String toString() {
-		return _id + "\t" + _doc.get("recordId") + "\t" + _score;
+		return _id + "\t" + _score + "\t" + _doc.get("recordId") ;
 	}
 	
 	/**
