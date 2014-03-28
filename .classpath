@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jna-3.2.7.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-arc-1.0.1-20130320.063621-5.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-common-1.0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-gzip-1.0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-warc-1.0.1-20130320.063707-5.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-tools-0.5.6-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jsoup-1.7.3.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-core-4.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-analyzers-common-4.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-queryparser-4.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/commons-cli-1.2.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
