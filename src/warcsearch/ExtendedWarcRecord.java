@@ -7,10 +7,24 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import java.io.InputStream;
+import java.util.Scanner;
 
+/**
+ * extends the WarcRecord capability
+ * WarcRecord misses parsing html payload,
+ * retrieving page texts from html pages,
+ * copy constructor for deep copies,
+ * basically it's crap.. 
+ * life is too short to write custom warc parsers though
+ * TODO - store webpage titles
+ */
 public class ExtendedWarcRecord {
 	
+	/** original WarcRecord */
 	private WarcRecord _record;
+	
+	/** needed warc data */
 	private String _payloadContent;
 	private String _recordId;
 	private String _targetUri;
@@ -19,6 +33,11 @@ public class ExtendedWarcRecord {
 	private String _trecId;
 	private org.jsoup.nodes.Document _htmlDoc;
 	
+	/**
+	 * constructor
+	 * prepares the object data
+	 * @param record original WarcRecord
+	 */
 	public ExtendedWarcRecord(WarcRecord record){
 		_record = record;
 		_payloadContent = convertStreamToString(record.getPayloadContent());
@@ -30,6 +49,10 @@ public class ExtendedWarcRecord {
 		_htmlDoc = Jsoup.parse(_payloadContent);
 	}
 	
+	/**
+	 * returns raw html _payloadContent
+	 * @return _payloadContent as a String
+	 */
 	public String getPayloadContent() {
 		return _payloadContent;
 	}
@@ -37,6 +60,7 @@ public class ExtendedWarcRecord {
 	/**
 	 * returns the content of this warc record
 	 * as indexable Lucene Document
+	 * @return doc LuceneDocument
 	 */
 	public Document getLuceneDocument() {
 		Document doc = new Document();
@@ -49,29 +73,33 @@ public class ExtendedWarcRecord {
 		return doc;
 	}
 	
+	/**
+	 * returns parsed text from page body
+	 * @return bodytext String
+	 */
 	public String getHtmlBodyText() {
 		Element body = _htmlDoc.getElementsByTag("body").get(0);
 		return body.text();
 	}
 	
-	private static String convertStreamToString(java.io.InputStream is) {
-        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+	/**
+	 * converts InputStream into String
+	 * thx to http://stackoverflow.com/a/5445161/1893452
+	 * it's a bit wtf though
+	 * @param is original java.io InputStream
+	 * @return same data as java String
+	 */
+	private static String convertStreamToString(InputStream is) {
+        Scanner s = new Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
 	
 	/**
+	 * returns the original WarcRecord
 	 * @return the _record
 	 */
 	public WarcRecord getRecord() {
 		return _record;
 	}
-
-	/**
-	 * @param _record the _record to set
-	 */
-	public void setRecord(WarcRecord _record) {
-		this._record = _record;
-	}
-
 	
 }

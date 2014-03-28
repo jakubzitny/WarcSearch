@@ -1,6 +1,5 @@
 package warcsearch;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import org.apache.commons.cli.*;
 
@@ -11,6 +10,7 @@ import org.apache.commons.cli.*;
  * 
  * @author Jakub Zitny <t102012001@ntut.edu.tw>
  * @author Thanduxolo Zwane <tTODO@ntut.edu.tw>
+ * @since Fri Mar 28 18:41:59 HKT 2014
  * 
  * TODO
  * - parallel
@@ -20,6 +20,7 @@ import org.apache.commons.cli.*;
  */
 public class WarcSearch {
 
+	/** CLI parser options */
 	private static CommandLineParser parser = new GnuParser();
 	private static HelpFormatter formatter = new HelpFormatter();
 	private static Options options = new Options();
@@ -30,7 +31,15 @@ public class WarcSearch {
 		new Option("q", "query", true, "query"),
 	};
 	
-	public static void run(String query, String archive) throws IOException {
+	/**
+	 * parses archive into ExtendedWarcRecords and to LuceneDocuments
+	 * indexes prepared LuceneDocuments
+	 * runs a search for given query
+	 * displays results
+	 * @param query
+	 * @param archive
+	 */
+	public static void run(String query, String archive) {
 		WebArchive wa = new WebArchive(archive);
 		Indexer indexer = new Indexer();
 		indexer.write(wa.getLuceneDocuments());
@@ -46,13 +55,19 @@ public class WarcSearch {
 	}
 	
 	/**
+	 * main
+	 * parses the command line arguments
+	 * if run in interctive mode then asks for query and archive and runs search
+	 * if run with proper arguments then just runs search
+	 * otherwise displays help message
 	 * @param args command line arguments
 	 */
 	public static void main(String[] args) {
+		// prepares options (stupid library)
 		for (Option o: option_array) {
 			options.addOption(o);
 		}
-		
+		// parses the options
 		try {
 	        CommandLine cli = parser.parse(options, args);
 			if (cli.hasOption("a") && cli.hasOption("q")) {
@@ -66,10 +81,10 @@ public class WarcSearch {
 			} else {
 				formatter.printHelp("WarcSearch", options );
 			}
-		} catch (IOException e) {
-	        System.err.println("Loading file failed.  Reason: " + e.getMessage() );
-	    } catch (ParseException exp) {
-	        System.err.println("Parsing failed.  Reason: " + exp.getMessage() );
+		} catch (ParseException e) {
+	        System.err.println("There was a problem with parsing arguments failed.");
+	        System.err.println(e.getMessage());
+	        e.getStackTrace();
 	    }
 		
 	}

@@ -9,26 +9,45 @@ import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
 
+/**
+ * WebArchive class for parsing the WARC full of WarcRecords
+ * parses WARC file into array of ExtendedWarcRecords
+ * is able to return the records as array of LuceneDocuments for indexing
+ * TODO - ugly readFile!
+ */
 public class WebArchive {
 
+	/** ExtendedWarcRecords */
 	private ArrayList<ExtendedWarcRecord> _records = new ArrayList<ExtendedWarcRecord>();
 	
-	public WebArchive() {
-		// TODO
-	}
-	
+	/**
+	 * constructor
+	 * initiates the parsing of given archive
+	 * stores the parsed results
+	 * @param archiveLoc location of WARC archive
+	 */
 	public WebArchive(String archiveLoc) {
 		_records = readFile(archiveLoc);
 	}
 	
+	/**
+	 * returns the ExtendedWarcRecords as Lucene documents
+	 * @return documents array of LuceneDocuments
+	 */
 	public ArrayList<Document> getLuceneDocuments() {
-		ArrayList<Document> bodies = new ArrayList<Document>();
+		ArrayList<Document> documents = new ArrayList<Document>();
 		for (ExtendedWarcRecord r: _records) {
-			bodies.add(r.getLuceneDocument());
+			documents.add(r.getLuceneDocument());
 		}
-		return bodies;
+		return documents;
 	}
 	
+	/**
+	 * reads and parses WARC file into ExtendedWarcRecords
+	 * a bit ugly though
+	 * @param archiveLoc
+	 * @return parsed array of ExtendedWarcRecord
+	 */
 	private ArrayList<ExtendedWarcRecord> readFile(String archiveLoc) {
 		try {
 			InputStream in = new FileInputStream(new File(archiveLoc));
@@ -40,15 +59,12 @@ public class WebArchive {
 				if (i > 0) // skip warc header (stupid library)
 					records.add(new ExtendedWarcRecord(record));
 				i++;
-			// TODO handle!
-			//  if (record.hasErrors()) {
-			//      errors += record.getValidationErrors().size();
-			//  }
 			}
 			in.close();
 			return records;
 		} catch (Exception e) {
-			System.err.println( "Loading file failed.  Reason: " + e.getMessage() );
+			System.err.println( "There was a problem with parsing the Web Archive.");
+			System.err.println(e.getMessage());
 			e.printStackTrace();
 			System.exit(1);
 			return null; // shut up eclipse
