@@ -4,6 +4,12 @@ Information Retrieval HW 1
 
 WarcSearch searches Web Archives (WARC) and based on a user's query retrieves results ranked by TFIDF.
 
+#### TODO FASTER!
+- faster faster!!
+- parallel addDoc or multiple consumers
+- 100 entry archive (2M) takes 6-10s to parse and index
+- 37k entries archive (1G) takes 20m to parse and index
+
 #### Usage
 
 	java -jar warcsearch.jar -a /path/to/archive.warc -q query

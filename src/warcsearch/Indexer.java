@@ -34,7 +34,7 @@ public class Indexer implements Runnable {
 	private static final String DEFAULT_SEARCH_FIELD = "text";
 	
 	/** system-specific temp directory with place to write indexes */
-	private static final String TMP_DIR = System.getProperty("java.io.tmpdir") + "/indexer";
+	private static final String TMP_DIR = System.getProperty("java.io.tmpdir") + "/WarcSearch/" + System.nanoTime();
 	
 	/** lucene analyzer */
 	private static StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_47);
@@ -85,7 +85,7 @@ public class Indexer implements Runnable {
 		    	ExtendedWarcRecord rec = _queue.take();
 		    	if (rec.isTerminator()) break;
 		    	_writer.addDocument(rec.getLuceneDocument());
-		    	_writer.commit();
+		    	//_writer.commit();
                 if (++i%500 == 0) {
                 	System.out.println("INFO indexed documents: " + i);
                 }
@@ -98,7 +98,7 @@ public class Indexer implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * output point
 	 * searches query in indexed Documents

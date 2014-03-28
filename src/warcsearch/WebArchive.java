@@ -78,6 +78,8 @@ public class WebArchive implements Runnable {
 			in.close();
 			// indicate last record in queue with empty record
 			_queue.put(new ExtendedWarcRecord());
+			_queue.put(new ExtendedWarcRecord());
+			_queue.put(new ExtendedWarcRecord());
 		} catch (Exception e) {
 			System.err.println("There was a problem with parsing the Web Archive.");
 			System.err.println(e.getMessage());
