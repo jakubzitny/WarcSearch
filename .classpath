@@ -9,7 +9,7 @@
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-warc-1.0.1-20130320.063707-5.jar"/>
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jwat-tools-0.5.6-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/jsoup-1.7.3.jar"/>
-	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-core-4.7-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-core-4.7-SNAPSHOT.jar" sourcepath="/Users/d_rc/Downloads/lucene-4.7.0/core/src/java/org"/>
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-analyzers-common-4.7-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/lucene-queryparser-4.7-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Users/d_rc/Library/Java/Extensions/commons-cli-1.2.jar"/>

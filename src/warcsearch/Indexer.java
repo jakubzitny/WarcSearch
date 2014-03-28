@@ -3,7 +3,6 @@ package warcsearch;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -44,15 +43,15 @@ public class Indexer implements Runnable {
 	//private static Directory _index = new RAMDirectory();
 	private FSDirectory _dir;
 	
-	/** lucene index writer, reader, searcher, collector */
-	private IndexWriterConfig _config; //TODO fix
-	//private IndexWriter _writer;
+	/** lucene index reader, searcher, collector */
+	private IndexWriterConfig _config;
+	private IndexWriter _writer;
 	private IndexReader _reader;
 	private IndexSearcher _searcher;
 	private TopScoreDocCollector _collector;
 	
 	/** produced documents go to this shared queue */
-	private final LinkedBlockingQueue<Document> _queue;
+	private final LinkedBlockingQueue<ExtendedWarcRecord> _queue;
 	
 	/**
 	 * Indexer constructor
@@ -60,17 +59,13 @@ public class Indexer implements Runnable {
 	 * IndexWriterConfig specifies IndexWriters behaviour
 	 * FSDirectory opens tmp file as index storage
 	 */
-	public Indexer(LinkedBlockingQueue<Document> queue) {
+	public Indexer(LinkedBlockingQueue<ExtendedWarcRecord> queue) {
 		_queue = queue;
 		_config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-		//_config.setOpenMode(OpenMode.CREATE); // to overwrite existing indexes
-		_config.setSimilarity(new DefaultSimilarity()); // DefaultSimilarity is subclass of TFIDFSimilarity
+		_config.setOpenMode(OpenMode.CREATE);
+		_config.setSimilarity(new DefaultSimilarity()); // DefaultSimilarity is sumclass of TFIDFSimilarity
 		try {	
 			_dir = FSDirectory.open(new File(TMP_DIR));
-			// TODO check if works!!
-			// reset the indexfile
-			IndexWriter iw = openWriter(OpenMode.CREATE);
-			closeWriter(iw);
 		} catch (IOException e) {
 			System.err.println("There was a problem with tmp dir in your system.");
 			System.err.println(e.getMessage());
@@ -83,39 +78,23 @@ public class Indexer implements Runnable {
 	 */
 	@Override
 	public void run() {
-		int i = 0;
-		while(true) {
-		    try {
-                write(_queue.take(), OpenMode.APPEND);
-                i++;
-                if (i%500 == 0) {
+		int i = 1;
+	    try {
+	    	_writer = new IndexWriter(_dir, _config);
+	    	while(true) {
+		    	ExtendedWarcRecord rec = _queue.take();
+		    	if (rec.isTerminator()) break;
+		    	_writer.addDocument(rec.getLuceneDocument());
+		    	_writer.commit();
+                if (++i%500 == 0) {
                 	System.out.println("INFO indexed documents: " + i);
                 }
-            } catch (InterruptedException e) {
-            	// TODO better
-                break;
-            }
-        }
-		final LinkedList<Document> remainingDocuments = new LinkedList<Document>();
-		_queue.drainTo(remainingDocuments);
-		for (Document doc: remainingDocuments){
-			write(doc, OpenMode.APPEND);
-		}
-	}
-	
-	/**
-	 * input point
-	 * indexes array of Documents
-	 * @param docs array of Lucene Documents
-	 */
-	public void write(Document doc, OpenMode openMode) {
-		try {
-			IndexWriter iw = openWriter(openMode);
-			iw.addDocument(doc);
-			closeWriter(iw);
-		} catch (IOException e) {
-			System.err.println("There was a problem with indexing Document.");
-			System.err.println(e.getMessage());
+	    	}
+            _writer.close();
+	    } catch (InterruptedException e) {
+         	e.getStackTrace();
+        } catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -162,25 +141,6 @@ public class Indexer implements Runnable {
 			e.printStackTrace();
 		}
 		return query;
-	}
-	
-	/**
-	 * opens configured IndexWriter for indexing
-	 * @throws IOException
-	 */
-	private IndexWriter openWriter(OpenMode openMode) throws IOException {
-		IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
-		config.setOpenMode(openMode);
-		config.setSimilarity(new DefaultSimilarity());
-		return new IndexWriter(_dir, config);
-	}
-	
-	/**
-	 * closes opened IndexWriter
-	 * @throws IOException
-	 */
-	private void closeWriter(IndexWriter indexWriter) throws IOException {
-		indexWriter.close();
 	}
 	
 	/**

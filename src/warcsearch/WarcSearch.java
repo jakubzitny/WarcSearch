@@ -12,7 +12,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.lucene.document.Document;
 
 /**
  * Information Retrieval HW 1
@@ -52,7 +51,7 @@ public class WarcSearch {
 	public static void run(String query, String archive) throws InterruptedException {
 		System.out.println("Configuring parser and indexer.");
 		// prepare queue and threads
-		LinkedBlockingQueue<Document> sharedQueue = new LinkedBlockingQueue<Document>(512);
+		LinkedBlockingQueue<ExtendedWarcRecord> sharedQueue = new LinkedBlockingQueue<ExtendedWarcRecord>(512);
 		WebArchive wa = new WebArchive(archive, sharedQueue);
 		Indexer indexer = new Indexer(sharedQueue);
 		// run pc
@@ -65,7 +64,6 @@ public class WarcSearch {
 		produce.join();
 		double delta = (System.nanoTime() - startTime)/1000000000.0;
 		System.out.println("Parsing done in " + delta + "s.");
-		consume.interrupt();
 		consume.join();
 		delta = (System.nanoTime() - startTime)/1000000000.0;
 		System.out.println("Indexing done in " + delta + "ms.");

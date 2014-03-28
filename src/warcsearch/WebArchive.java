@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.lucene.document.Document;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
@@ -23,7 +22,7 @@ public class WebArchive implements Runnable {
 	private static final String WARC_TYPE_WARCINFO = "warcinfo";
 	
 	/** produced documents go to this shared queue */
-	private final LinkedBlockingQueue<Document> _queue;
+	private final LinkedBlockingQueue<ExtendedWarcRecord> _queue;
 	
 	/** path to WARC archive */
 	private final String _archiveLoc;
@@ -32,7 +31,7 @@ public class WebArchive implements Runnable {
 	 * constructor
 	 * @param archiveLoc location of WARC archive
 	 */
-	public WebArchive(String archiveLoc, LinkedBlockingQueue<Document> queue) {
+	public WebArchive(String archiveLoc, LinkedBlockingQueue<ExtendedWarcRecord> queue) {
 		_queue = queue;
 		_archiveLoc = archiveLoc;
 	}
@@ -67,7 +66,7 @@ public class WebArchive implements Runnable {
 				String type = record.getHeader(WARC_TYPE).value;
 				if (type.equals(WARC_TYPE_RESPONSE)) {
 					// TODO enhance
-					_queue.put(new ExtendedWarcRecord(record).getLuceneDocument());
+					_queue.put(new ExtendedWarcRecord(record));
 				} else if (type.equals(WARC_TYPE_WARCINFO)) { 
 					// nothing special just the warc main header
 					// stupid library returns it as a payload
@@ -77,6 +76,8 @@ public class WebArchive implements Runnable {
 				}
 			}
 			in.close();
+			// indicate last record in queue with empty record
+			_queue.put(new ExtendedWarcRecord());
 		} catch (Exception e) {
 			System.err.println("There was a problem with parsing the Web Archive.");
 			System.err.println(e.getMessage());

@@ -28,10 +28,18 @@ public class ExtendedWarcRecord {
 	private String _payloadContent;
 	private String _recordId;
 	private String _targetUri;
-	//private String _warcInfoId;
 	private String _date;
 	private String _trecId;
 	private org.jsoup.nodes.Document _htmlDoc;
+	private boolean _terminator;
+	
+	/**
+	 * empty constructor
+	 * used to created terminator record
+	 */
+	public ExtendedWarcRecord() {
+		_terminator = true;
+	}
 	
 	/**
 	 * constructor
@@ -40,15 +48,25 @@ public class ExtendedWarcRecord {
 	 */
 	public ExtendedWarcRecord(WarcRecord record){
 		_record = record;
+		_terminator = false;
 		_payloadContent = convertStreamToString(record.getPayloadContent());
 		_recordId = record.getHeader("WARC-Record-ID").value;
 		_targetUri = record.getHeader("WARC-Target-URI").value;
-		//_warcInfoId = record.getHeader("WARC-Warcinfo-ID").value;
 		_date = record.getHeader("WARC-Date").value;
 		_trecId = record.getHeader("WARC-TREC-ID").value;
 		_htmlDoc = Jsoup.parse(_payloadContent);
 	}
 	
+	/**
+	 * returns true if the record is terminator
+	 * indicates the last parsed record
+	 * for consumer to end itself
+	 * @return the _terminator
+	 */
+	public boolean isTerminator() {
+		return _terminator;
+	}
+
 	/**
 	 * returns raw html _payloadContent
 	 * @return _payloadContent as a String
@@ -68,7 +86,6 @@ public class ExtendedWarcRecord {
 		doc.add(new StringField("date", _date, Field.Store.YES));
 		doc.add(new StringField("recordId", _recordId, Field.Store.YES));
 		doc.add(new StringField("targetUri", _targetUri, Field.Store.YES));
-		//doc.add(new StringField("warcInfoId", _warcInfoId, Field.Store.YES));
 		doc.add(new StringField("trecId", _trecId, Field.Store.YES));
 		return doc;
 	}
