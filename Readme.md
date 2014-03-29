@@ -16,6 +16,11 @@ WarcSearch searches Web Archives (WARC) and based on a user's query retrieves re
 - large archive 20m to parse and index!
 - sequential version profiling - *jsoup.Parse()* and *indexWriter.addDocument()*
 
+## Sample data
+
+- [here](http://140.124.183.31/en0000/)
+- [here](https://bitbucket.org/jakubzitny/warcsearch/downloads)
+
 #### Usage
 
 	java -jar warcsearch.jar -a /path/to/archive.warc -q query [-t number_of_threads]
