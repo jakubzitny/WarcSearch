@@ -1,19 +1,24 @@
 ## WarcSearch
 
-Information Retrieval HW 1
+WarcSearch searches Web Archives (WARC) and based on a user's query retrieves results ranked by TFIDF. Information Retrieval HW 1 by Thanduxolo Zwane and Jakub Zitny.
 
-WarcSearch searches Web Archives (WARC) and based on a user's query retrieves results ranked by TFIDF.
+#### INDEXING STATS
+- small archive - 100 records 2MB
+- large archive - 37k records 1GB
+- 2 cores OS X (2 thread) - small 2.5s, large 180s
+- 4 cores Ubuntu VPS (1t) - small 2.8s, large 70.2s
+- 4 cores Ubuntu VPS (2t) - small 2.0s, large 64.7s
+- 4 cores Ubuntu VPS (4t) - small 1.9s, large 63.7s <-
+- 4 cores Ubuntu VPS (8t) - small 2.3s, large 69.5s
 
-#### TODO FASTER!
-- faster faster!!
-- parallel addDoc or multiple consumers
-- 100 entry archive (2M) takes 6-10s to parse and index
-- 37k entries archive (1G) takes 20m to parse and index
+###### Original sequential
+- small archive 6-10s to parse and index
+- large archive 20m to parse and index!
 - sequential version profiling - *jsoup.Parse()* and *indexWriter.addDocument()*
 
 #### Usage
 
-	java -jar warcsearch.jar -a /path/to/archive.warc -q query
+	java -jar warcsearch.jar -a /path/to/archive.warc -q query [-t number_of_threads]
 
 #### Thx to
 1. [Apache Lucene](https://lucene.apache.org/core/4_7_0/index.html) - indexing and search
