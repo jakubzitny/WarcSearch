@@ -23,7 +23,10 @@ import org.apache.commons.cli.ParseException;
  * @since Fri Mar 28 18:41:59 HKT 2014
  * 
  * TODO
- * - parallel
+ * - increase thread count to mergescheduler
+ * - write own WARC parser
+ * - parallel better
+ * - keep track of processed records
  * - handle input better?
  */
 public class WarcSearch {
@@ -37,6 +40,7 @@ public class WarcSearch {
 		new Option("i", "interactive", false, "runs the program in interactive mode"),
 		new Option("a", "archive", true, "path to warc file"),
 		new Option("q", "query", true, "query"),
+		new Option("t", "threads", true, "number of threas"),
 	};
 	
 	/**
@@ -46,15 +50,16 @@ public class WarcSearch {
 	 * displays results
 	 * @param query
 	 * @param archive
+	 * @param threadNo determined number of threads for indexing
 	 * @throws InterruptedException 
 	 */
-	public static void run(String query, String archive) throws InterruptedException {
-		System.out.println("Configuring parser and indexer.");
+	public static void run(String query, String archive, int threadNo) throws InterruptedException {
 		// prepare queue and threads
+		System.out.println("Configuring parser and indexer.");
 		LinkedBlockingQueue<ExtendedWarcRecord> sharedQueue = new LinkedBlockingQueue<ExtendedWarcRecord>(512);
-		WebArchive wa = new WebArchive(archive, sharedQueue);
-		Indexer indexer = new Indexer(sharedQueue);
-		// run pc
+		WebArchive wa = new WebArchive(archive, sharedQueue, threadNo);
+		Indexer indexer = new Indexer(sharedQueue, threadNo);
+		// run p-c
 		Thread produce = new Thread(wa);
 		Thread consume = new Thread(indexer);
 		long startTime = System.nanoTime();
@@ -66,21 +71,46 @@ public class WarcSearch {
 		System.out.println("Parsing done in " + delta + "s.");
 		consume.join();
 		delta = (System.nanoTime() - startTime)/1000000000.0;
-		System.out.println("Indexing done in " + delta + "ms.");
+		System.out.println("Indexing done in " + delta + "s.");
 		// search
 		System.out.println("Searching for \"" + query + "\".");
 		startTime = System.nanoTime();
 		ArrayList<Result> results = indexer.search(query);
 		delta = (System.nanoTime() - startTime)/1000000000.0;
 		// display
-		System.out.println("Found " + results.size() + " hits in " + delta + "ms.");
+		System.out.println("Found " + results.size() + " hits in " + delta + "s.");
 		System.out.println();
-		System.out.println("Rank\tDoc#\tScore\t\t\tDocId");
-		System.out.println("---------------------------------------------------------------------------------------");
+		System.out.println("Rank\tScore\t\t\tDocId");
+		System.out.println("-------------------------------------------------------------------------------");
 		int i = 0;
 		for (Result r: results) {
 			System.out.println(++i + "\t"+ r.toString());
 		}
+	}
+	
+	/**
+	 * determines the number of consument threads to use for indexing
+	 * is based on cli argument, but makes adjustments
+	 * if no or wrong option or "0" from -i is specified - set to number of logical cores
+	 * limit to no more than 4 times number of logical cores
+	 * @param threadsStr string option -t parsed from command line
+	 * @return number of threads integer
+	 */
+	public static int determineNumberOfThreads(String threadsNoStr) {
+		int threadNo;
+		int cores = Runtime.getRuntime().availableProcessors();
+		try {
+			threadNo = Integer.parseInt(threadsNoStr);
+			if (threadNo < 1) {
+				throw new NumberFormatException();
+			} else if (threadNo > cores * 4) {
+				threadNo = cores * 4;
+				System.out.println("Adjusting number of threads to " + threadNo + ".");
+			}
+		} catch (NumberFormatException e) {
+			threadNo = cores;
+		}
+		return threadNo;
 	}
 	
 	/**
@@ -102,29 +132,27 @@ public class WarcSearch {
 			if (cli.hasOption("a") && cli.hasOption("q")) {
 				String query = cli.getOptionValue("q");
 				String archive = cli.getOptionValue("a");
-				run(query, archive);
+				int threads = determineNumberOfThreads(cli.getOptionValue("t", "0"));
+				run(query, archive, threads);
 			} else if (cli.hasOption("i")) {
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				System.out.println("Pleae enter the path to WARC archive:");
 				String archive = br.readLine();
 				System.out.println("Pleae enter the query:");
 				String query = br.readLine();
-				run(query, archive);
+				run(query, archive, determineNumberOfThreads("0"));
 			} else {
 				formatter.printHelp("warcsearch", options );
 				System.exit(1);
 			}
 		} catch (ParseException e) {
 	        System.err.println("There was a problem with parsing arguments failed.");
-	        System.err.println(e.getMessage());
 	        e.getStackTrace();
 	    } catch (IOException e) {
 	        System.err.println("There was a problem with user input.");
-	        System.err.println(e.getMessage());
 	        e.getStackTrace();
 	    } catch (InterruptedException e) {
-	        System.err.println("There was a problem threads.");
-	        System.err.println(e.getMessage());
+	        System.err.println("There was a problem with threads.");
 	        e.getStackTrace();
 	    }
 		

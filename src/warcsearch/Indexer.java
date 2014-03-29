@@ -3,6 +3,7 @@ package warcsearch;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -53,49 +54,27 @@ public class Indexer implements Runnable {
 	/** produced documents go to this shared queue */
 	private final LinkedBlockingQueue<ExtendedWarcRecord> _queue;
 	
+	/** number of consuming threads */
+	private final int _threadNo;
+	
 	/**
 	 * Indexer constructor
 	 * prepares Indexer default needs
 	 * IndexWriterConfig specifies IndexWriters behaviour
 	 * FSDirectory opens tmp file as index storage
 	 */
-	public Indexer(LinkedBlockingQueue<ExtendedWarcRecord> queue) {
+	public Indexer(LinkedBlockingQueue<ExtendedWarcRecord> queue, int threadNo) {
 		_queue = queue;
+		_threadNo = threadNo;
 		_config = new IndexWriterConfig(Version.LUCENE_47, analyzer);
 		_config.setOpenMode(OpenMode.CREATE);
-		_config.setSimilarity(new DefaultSimilarity()); // DefaultSimilarity is sumclass of TFIDFSimilarity
+		_config.setSimilarity(new DefaultSimilarity()); // DefaultSimilarity is subclass of TFIDFSimilarity
 		try {	
 			_dir = FSDirectory.open(new File(TMP_DIR));
 		} catch (IOException e) {
 			System.err.println("There was a problem with tmp dir in your system.");
 			System.err.println(e.getMessage());
 			e.getStackTrace();
-		}
-	}
-
-	/**
-	 * runs the indexing task
-	 */
-	@Override
-	public void run() {
-		int i = 1;
-	    try {
-	    	_writer = new IndexWriter(_dir, _config);
-	    	while(true) {
-		    	ExtendedWarcRecord rec = _queue.take();
-		    	if (rec.isTerminator()) break;
-		    	_writer.addDocument(rec.getLuceneDocument());
-		    	//_writer.commit();
-                if (++i%500 == 0) {
-                	System.out.println("INFO indexed documents: " + i);
-                }
-	    	}
-            _writer.close();
-	    } catch (InterruptedException e) {
-         	e.getStackTrace();
-        } catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -166,4 +145,80 @@ public class Indexer implements Runnable {
 		_reader.close();
 	}
 	
+	/**
+	 * runs the indexer
+	 * delegates tasks (taking from queue and adding to indexwriter)
+	 * to IndexerTask threads
+	 */
+	@Override
+	public void run() {
+	    try {
+	    	_writer = new IndexWriter(_dir, _config);
+	    	List<Thread> threads = new ArrayList<Thread>();
+	    	for (int i = 0; i < _threadNo; i++) {
+	    		threads.add(new Thread(new IndexerTask(_writer, _queue, i)));
+	        }
+	    	for (Thread t: threads)
+	    		t.start();
+	    	for (Thread t: threads)
+	    		t.join();
+            _writer.close();
+	    } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * runnable IndexerTask class for executing the heavy stuff
+	 * - taking produced records from queue and adding them to indexwriter
+	 */
+	private class IndexerTask implements Runnable {
+
+		private IndexWriter _writer;
+		private LinkedBlockingQueue<ExtendedWarcRecord> _queue;
+		private int _threadNumber;
+		
+		/**
+		 * constructor
+		 * sets up reference to opened indexwriter and queue
+		 * holds the information which thread number it is for debugging
+		 * @param writer
+		 * @param queue
+		 * @param threadNumber
+		 */
+		public IndexerTask(IndexWriter writer, LinkedBlockingQueue<ExtendedWarcRecord> queue, int threadNumber) {
+			_writer = writer;
+			_queue = queue;
+			_threadNumber = threadNumber;
+		}
+		
+		/**
+		 * the heavy duty
+		 */
+		@Override
+		public void run() {
+			int i = 0;
+			while (true) {
+				try {
+					ExtendedWarcRecord rec = _queue.take();
+					if (rec.isTerminator()) break;
+					_writer.addDocument(rec.getLuceneDocument());
+					if (++i%1000==0)
+						System.out.println("INFO: Thread#"+_threadNumber+" processed " + i);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+
 }

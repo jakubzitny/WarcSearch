@@ -22,7 +22,7 @@ public class Result {
 	/**
 	 * "quickfill" constructor
 	 * @param doc LuceneDocument data
-	 * @param id int original id of the document in WARC
+	 * @param id int number of record when parsed sequentially (throw away)
 	 * @param score searched score for query in LuceneDocument data
 	 */
 	public Result (Document doc, int id, double score) {
@@ -35,7 +35,7 @@ public class Result {
 	 * returns nice line of the result for user
 	 */
 	public String toString() {
-		return _id + "\t" + _score + "\t" + _doc.get("recordId") ;
+		return _score + "\t" + _doc.get("recordId");
 	}
 	
 	/**

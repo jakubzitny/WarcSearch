@@ -54,7 +54,7 @@ public class ExtendedWarcRecord {
 		_targetUri = record.getHeader("WARC-Target-URI").value;
 		_date = record.getHeader("WARC-Date").value;
 		_trecId = record.getHeader("WARC-TREC-ID").value;
-		_htmlDoc = Jsoup.parse(_payloadContent);
+		_htmlDoc = Jsoup.parse(_payloadContent); // <--
 	}
 	
 	/**
