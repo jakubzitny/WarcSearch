@@ -29,4 +29,5 @@ WarcSearch searches Web Archives (WARC) and based on a user's query retrieves re
 1. [Apache Lucene](https://lucene.apache.org/core/4_7_0/index.html) - indexing and search
 2. [Java Web Archive Toolkit](https://sbforge.org/display/JWAT/Documentation) - parsing WARC
 3. [Apache Commons CLI](http://commons.apache.org/proper/commons-cli/) - parsing cli arguments
-4. my mother
+4. [jsoup Java HTML Parser](http://jsoup.org) - parsing html
+5. my mother
